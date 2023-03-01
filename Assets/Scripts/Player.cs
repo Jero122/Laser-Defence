@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Player : MonoBehaviour
@@ -19,6 +18,9 @@ public class Player : MonoBehaviour
     [SerializeField] float laserSpeed = 10f;
     [SerializeField] float laserFiringPeriod = 0.1f;
 
+    private Rigidbody2D rb;
+    private float deltaX;
+    private float deltaY;
     Coroutine firingCoroutine;
     float xMin;
     float xMax;
@@ -29,14 +31,21 @@ public class Player : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        rb = gameObject.GetComponent<Rigidbody2D>();
         SetUpMoveBoundaries();
     }
 
     // Update is called once per frame
     void Update()
     {
-        Move();
+        deltaX = Input.GetAxis("Horizontal") * moveSpeed;
+        deltaY = Input.GetAxis("Vertical") *  moveSpeed;
         Fire();
+    }
+
+    private void FixedUpdate()
+    {
+        Move();
     }
 
     private void Fire()
@@ -65,13 +74,13 @@ public class Player : MonoBehaviour
 
     private void Move()
     {
-        var deltaX = Input.GetAxis("Horizontal") * Time.deltaTime * moveSpeed;
-        var deltaY = Input.GetAxis("Vertical") * Time.deltaTime * moveSpeed;
+        
 
-        var newXPos = Mathf.Clamp(transform.position.x + deltaX, xMin + padding, xMax - padding);
-        var newYPos = Mathf.Clamp( transform.position.y + deltaY,yMin + padding, yMax - padding);
+        var newXPos = transform.position.x + deltaX * Time.deltaTime;
+        var newYPos = transform.position.y + deltaY * Time.deltaTime;
 
-        transform.position = new Vector2(newXPos, newYPos);
+        rb.velocity = new Vector2(deltaX, deltaY);
+        //transform.position = new Vector2(newXPos, newYPos);
     }
 
     private void SetUpMoveBoundaries()
@@ -91,6 +100,12 @@ public class Player : MonoBehaviour
             return;
         }
         ProcessHit(damageDealer);
+    }
+
+
+    private void OnCollisionEnter(Collision other)
+    {
+        Debug.Log("HIT");
     }
 
     private void ProcessHit(DamageDealer damageDealer)
